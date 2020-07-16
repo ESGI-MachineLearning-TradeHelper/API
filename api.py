@@ -6,6 +6,7 @@ import numpy as np
 import base64
 
 target_size = (128, 128)
+small_size = (64, 64)
 
 app = Flask("DEEPLEARNING")
 app.config["DEBUG"] = True
@@ -14,46 +15,41 @@ app.config["DEBUG"] = True
 def predict():
     r = request
     type = int(r.args.get("type"))
-    if not r.form:
+    if not r.files:
         return Response(status=400)
-    form = r.form.to_dict()
-    if not form['image[content]']:
+    elif not r.files['image']:
         return Response(status=400)
     else:
-        print(form['image[content]'])
-        stripped_base64image = form['image[content]'].split(',')[1]
-        print(stripped_base64image)
-        img_data = base64.b64decode(stripped_base64image)
-        filename = form['image[name]']
-        with open("img/" + filename, 'wb') as f:
-            f.write(img_data)
+        file = r.files['image']
+        img = Image.open(file.stream)
+        filename = file.filename
+        img = img.save("img/" + filename)
         # CALL FOR MODEL
         if type == 1:
-            x_train = load_dataset(filename, 'L')
+            x_train = load_dataset(filename, 'L', target_size)
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/linear.keras')
             resp = model.predict(x_train)
         elif type == 2:
-            x_train = load_dataset(filename, 'RGB')
+            x_train = load_dataset(filename, 'RGB', target_size)
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/cnn.keras')
             resp = model.predict(x_train)
         elif type == 3:
-            x_train = load_dataset(filename, 'L')
+            x_train = load_dataset(filename, 'L', target_size)
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/perceptron.keras')
             resp = model.predict(x_train)
         elif type == 4:
-            x_train = load_dataset(filename, 'RGB')
+            x_train = load_dataset(filename, 'RGB', small_size)
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/rnn.keras')
             resp = model.predict(x_train)
         else:
-            x_train = load_dataset(filename, 'RGB')
+            x_train = load_dataset(filename, 'RGB', target_size)
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/unet.keras')
             resp = model.predict(x_train)
-
 
         # RETURN OF MODE
         if resp[0][0] > resp[0][1] and resp[0][0] > resp[0][2]:
@@ -68,18 +64,18 @@ def predict():
         print(resp)
         return Response(response=response_pickled, status=200, mimetype="application/json")
 
-def load_dataset(filename, type):
+def load_dataset(filename, type, size):
     test_path = "img/"
     x_test_list = []
-    load_set_from_directory(test_path, x_test_list, filename, type)
+    load_set_from_directory(test_path, x_test_list, filename, type, size)
     return np.array(x_test_list)
 
-def load_set_from_directory(train_path, x_train_list, filename, type):
-    load_image_from_directory(train_path, x_train_list, filename, type)
+def load_set_from_directory(train_path, x_train_list, filename, type, size):
+    load_image_from_directory(train_path, x_train_list, filename, type, size)
 
-def load_image_from_directory(path, x_train_list, filename, type):
+def load_image_from_directory(path, x_train_list, filename, type, size):
     x_train_list.append(
-            np.array(Image.open(path + filename).convert(type).resize(target_size)) / 255.0)  # color
+            np.array(Image.open(path + filename).convert(type).resize(size)) / 255.0)  # color
 
 
 app.run(host="0.0.0.0", port=5000)
