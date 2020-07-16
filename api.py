@@ -1,13 +1,15 @@
 from flask import Flask, request, Response
 from PIL import Image
 import jsonpickle
+<<<<<<< HEAD
 import tensorflow as tf
 import numpy as np
+=======
+>>>>>>> b7f8df97c10e02bb37ed48720821ebbc3daad60b
 import base64
 
 app = Flask("DEEPLEARNING")
 app.config["DEBUG"] = True
-
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
@@ -66,6 +68,7 @@ def predict():
             response_pickled = jsonpickle.encode({'predict': "Double bottom", 'predict_percent': resp[0][2]})
         else:
             response_pickled = jsonpickle.encode({'predict':"None", 'predict_percent':0})
+
         return Response(response=response_pickled, status=200, mimetype="application/json")
 
 
