@@ -5,6 +5,8 @@ import tensorflow as tf
 import numpy as np
 import base64
 
+target_size = (128, 128)
+
 app = Flask("DEEPLEARNING")
 app.config["DEBUG"] = True
 
@@ -18,55 +20,66 @@ def predict():
     if not form['image[content]']:
         return Response(status=400)
     else:
+        print(form['image[content]'])
         stripped_base64image = form['image[content]'].split(',')[1]
+        print(stripped_base64image)
         img_data = base64.b64decode(stripped_base64image)
-        filename = "img/" + form['image[name]']
-        with open(filename, 'wb') as f:
+        filename = form['image[name]']
+        with open("img/" + filename, 'wb') as f:
             f.write(img_data)
         # CALL FOR MODEL
         if type == 1:
-            model = tf.keras.models.load_model('models/linear.keras')
-            imgFrom = Image.open("img/" + filename)
-            imgResized = imgFrom.convert("L").resize((128, 128))
-            npArray = np.array(imgResized) / 255
-            resp = model.predict(npArray[None, :])
+            x_train = load_dataset(filename)
+            print(x_train.shape)
+            model = tf.keras.models.load_model('./models/linear.keras')
+            resp = model.predict(x_train)
         elif type == 2:
-            model = tf.keras.models.load_model('models/cnn.keras')
-            imgFrom = Image.open("img/" + filename)
-            imgResized = imgFrom.convert("RGB").resize((128, 128))
-            npArray = np.array(imgResized) / 255
-            resp = model.predict(npArray[None, :])
+            x_train = load_dataset(filename)
+            print(x_train.shape)
+            model = tf.keras.models.load_model('./models/cnn.keras')
+            resp = model.predict(x_train)
         elif type == 3:
-            model = tf.keras.models.load_model('models/perceptron.keras')
-            imgFrom = Image.open("img/" + filename)
-            imgResized = imgFrom.convert("L").resize((128, 128))
-            npArray = np.array(imgResized) / 255
-            resp = model.predict(npArray[None, :])
+            x_train = load_dataset(filename)
+            print(x_train.shape)
+            model = tf.keras.models.load_model('./models/perceptron.keras')
+            resp = model.predict(x_train)
         elif type == 4:
-            model = tf.keras.models.load_model('models/rnn.keras')
-            imgFrom = Image.open("img/" + filename)
-            imgResized = imgFrom.convert("RGB").resize((64, 64))
-            npArray = np.array(imgResized)
-            npExpand = np.expand_dims(npArray, axis=0)
-            resp = model.predict(npExpand)
+            x_train = load_dataset(filename)
+            print(x_train.shape)
+            model = tf.keras.models.load_model('./models/rnn.keras')
+            resp = model.predict(x_train)
         else:
-            model = tf.keras.models.load_model('models/unet.keras')
-            imgFrom = Image.open("img/" + filename)
-            imgResized = imgFrom.convert("RGB").resize((128, 128))
-            npArray = np.array(imgResized)
-            npExpand = np.expand_dims(npArray, axis=0)
-            resp = model.predict(npExpand)
+            x_train = load_dataset(filename)
+            print(x_train.shape)
+            model = tf.keras.models.load_model('./models/unet.keras')
+            resp = model.predict(x_train)
+
+
         # RETURN OF MODE
         if resp[0][0] > resp[0][1] and resp[0][0] > resp[0][2]:
-            response_pickled = jsonpickle.encode({'predict': "Rectange", 'predict_percent': resp[0][0]})
-        if resp[0][1] > resp[0][0] and resp[0][1] > resp[0][2]:
-            response_pickled = jsonpickle.encode({'predict': "Flag", 'predict_percent': resp[0][1]})
-        if resp[0][2] > resp[0][0] and resp[0][2] > resp[0][1]:
-            response_pickled = jsonpickle.encode({'predict': "Double bottom", 'predict_percent': resp[0][2]})
+            response_pickled = jsonpickle.encode({'predict': "Rectange", 'predict_percent': str(resp[0][0])})
+        elif resp[0][1] > resp[0][0] and resp[0][1] > resp[0][2]:
+            response_pickled = jsonpickle.encode({'predict': "Flag", 'predict_percent': str(resp[0][1])})
+        elif resp[0][2] > resp[0][0] and resp[0][2] > resp[0][1]:
+            response_pickled = jsonpickle.encode({'predict': "Double bottom", 'predict_percent': str(resp[0][2])})
         else:
             response_pickled = jsonpickle.encode({'predict':"None", 'predict_percent':0})
 
+        print(resp)
         return Response(response=response_pickled, status=200, mimetype="application/json")
+
+def load_dataset(filename):
+    test_path = "img/"
+    x_test_list = []
+    load_set_from_directory(test_path, x_test_list, filename)
+    return np.array(x_test_list)
+
+def load_set_from_directory(train_path, x_train_list, filename):
+    load_image_from_directory(train_path, x_train_list, filename)
+
+def load_image_from_directory(path, x_train_list, filename):
+    x_train_list.append(
+            np.array(Image.open(path + filename).convert('L').resize(target_size)) / 255.0)  # color
 
 
 app.run(host="0.0.0.0", port=5000)
