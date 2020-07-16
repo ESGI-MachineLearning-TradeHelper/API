@@ -1,11 +1,8 @@
 from flask import Flask, request, Response
 from PIL import Image
 import jsonpickle
-<<<<<<< HEAD
 import tensorflow as tf
 import numpy as np
-=======
->>>>>>> b7f8df97c10e02bb37ed48720821ebbc3daad60b
 import base64
 
 app = Flask("DEEPLEARNING")
