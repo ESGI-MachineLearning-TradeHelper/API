@@ -29,27 +29,27 @@ def predict():
             f.write(img_data)
         # CALL FOR MODEL
         if type == 1:
-            x_train = load_dataset(filename)
+            x_train = load_dataset(filename, 'L')
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/linear.keras')
             resp = model.predict(x_train)
         elif type == 2:
-            x_train = load_dataset(filename)
+            x_train = load_dataset(filename, 'RGB')
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/cnn.keras')
             resp = model.predict(x_train)
         elif type == 3:
-            x_train = load_dataset(filename)
+            x_train = load_dataset(filename, 'L')
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/perceptron.keras')
             resp = model.predict(x_train)
         elif type == 4:
-            x_train = load_dataset(filename)
+            x_train = load_dataset(filename, 'RGB')
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/rnn.keras')
             resp = model.predict(x_train)
         else:
-            x_train = load_dataset(filename)
+            x_train = load_dataset(filename, 'RGB')
             print(x_train.shape)
             model = tf.keras.models.load_model('./models/unet.keras')
             resp = model.predict(x_train)
@@ -68,18 +68,18 @@ def predict():
         print(resp)
         return Response(response=response_pickled, status=200, mimetype="application/json")
 
-def load_dataset(filename):
+def load_dataset(filename, type):
     test_path = "img/"
     x_test_list = []
-    load_set_from_directory(test_path, x_test_list, filename)
+    load_set_from_directory(test_path, x_test_list, filename, type)
     return np.array(x_test_list)
 
-def load_set_from_directory(train_path, x_train_list, filename):
-    load_image_from_directory(train_path, x_train_list, filename)
+def load_set_from_directory(train_path, x_train_list, filename, type):
+    load_image_from_directory(train_path, x_train_list, filename, type)
 
-def load_image_from_directory(path, x_train_list, filename):
+def load_image_from_directory(path, x_train_list, filename, type):
     x_train_list.append(
-            np.array(Image.open(path + filename).convert('L').resize(target_size)) / 255.0)  # color
+            np.array(Image.open(path + filename).convert(type).resize(target_size)) / 255.0)  # color
 
 
 app.run(host="0.0.0.0", port=5000)
