@@ -68,6 +68,13 @@ def predict():
         print(resp)
         return Response(response=response_pickled, status=200, mimetype="application/json")
 
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  return response
+
 def load_dataset(filename, type, size):
     test_path = "img/"
     x_test_list = []
