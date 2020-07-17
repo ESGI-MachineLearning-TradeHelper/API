@@ -17,6 +17,6 @@ Download the project `git clone https://github.com/ESGI-MachineLearning-TradeHel
 
 Move in the directory `cd TradeHelper`
 
-Install the dependencies `pip install Flask ; pip install Pillow ; pip install jsonpickle`
+Install the dependencies `pip install Flask ; pip install Pillow ; pip install jsonpickle ; pip install tensorflow ; pip install numpy`
 
 Run `python api.py`
