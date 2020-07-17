@@ -15,15 +15,19 @@ app.config["DEBUG"] = True
 def predict():
     r = request
     type = int(r.args.get("type"))
-    if not r.files:
+    if not r.form:
         return Response(status=400)
-    elif not r.files['image']:
+    form = r.form.to_dict()
+    if not form['image[content]']:
         return Response(status=400)
     else:
-        file = r.files['image']
-        img = Image.open(file.stream)
-        filename = file.filename
-        img = img.save("img/" + filename)
+        print(form['image[content]'])
+        stripped_base64image = form['image[content]'].split(',')[1]
+        print(stripped_base64image)
+        img_data = base64.b64decode(stripped_base64image)
+        filename = form['image[name]']
+        with open("img/" + filename, 'wb') as f:
+            f.write(img_data)
         # CALL FOR MODEL
         if type == 1:
             x_train = load_dataset(filename, 'L', target_size)
@@ -53,7 +57,7 @@ def predict():
 
         # RETURN OF MODE
         if resp[0][0] > resp[0][1] and resp[0][0] > resp[0][2]:
-            response_pickled = jsonpickle.encode({'predict': "Rectange", 'predict_percent': str(resp[0][0])})
+            response_pickled = jsonpickle.encode({'predict': "Rectangle", 'predict_percent': str(resp[0][0])})
         elif resp[0][1] > resp[0][0] and resp[0][1] > resp[0][2]:
             response_pickled = jsonpickle.encode({'predict': "Flag", 'predict_percent': str(resp[0][1])})
         elif resp[0][2] > resp[0][0] and resp[0][2] > resp[0][1]:
